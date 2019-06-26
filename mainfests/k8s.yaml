@@ -1,0 +1,89 @@
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: service-user
+  namespace: dev
+  labels:
+    app: service-user
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: service-user
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: smile
+      containers:
+      - image: <IMAGE>:<IMAGE_TAG>
+        name: service-user
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: server-port
+        - containerPort: 5005
+          name: jvm-debug
+        env:
+        - name: JAVA_OPTS
+          value: "-agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n"
+        - name: DIY_EUREKA_HOST_MASTER
+          value: "eureka-master.dev.svc.cluster.local"
+        - name: DIY_EUREKA_HOST_BACKUP01
+          value: "eureka-backup01.dev.svc.cluster.local"
+        - name: DIY_EUREKA_HOST_BACKUP02
+          value: "eureka-backup02.dev.svc.cluster.local"
+        - name: DIY_EUREKA_SERVER_PORT
+          value: "8761"
+        - name: DIY_EUREKA_USER
+          value: "smile"
+        - name: DIY_EUREKA_PASSWORD
+          value: "smilelxy"
+        - name: CONFIG_PROFILE
+          value: "master"
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: service-user
+  namespace: dev
+  labels:
+    app: service-user
+spec:
+  selector:
+    app: service-user
+  type: NodePort
+  ports:
+  - name: server-port
+    port: 8080
+    targetPort: server-port
+  - name: jvm-debug
+    port: 5005
+    targetPort: jvm-debug
+    nodePort: 35005
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: service-user
+  namespace: dev
+  labels:
+    app: service-user
+spec:
+  rules:
+  - host: user.smile.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: service-user
+          servicePort: 8080

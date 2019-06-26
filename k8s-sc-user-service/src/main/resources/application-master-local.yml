@@ -1,0 +1,6 @@
+server:
+  port: 8081
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${diy.eureka.user:smile}:${diy.eureka.password:smilelxy}@${diy.eureka.host.master:127.0.0.1}:${diy.eureka.server.port:8761}/eureka

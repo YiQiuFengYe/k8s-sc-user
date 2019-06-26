@@ -1,0 +1,19 @@
+spring:
+  profiles:
+    active: ${spring.profile.active:master}
+  application:
+    name: service-user
+  cloud:
+    inetutils:
+      default-ip-address:
+server:
+  port: 8080
+eureka:
+  instance:
+    hostname: ${spring.cloud.client.ip-address}
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    prefer-ip-address: true
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
